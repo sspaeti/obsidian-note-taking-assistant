@@ -3,11 +3,11 @@
 Ingest Obsidian vault into DuckDB with vector embeddings.
 
 Usage:
-    python scripts/ingest.py [vault_path] [--db database.duckdb]
+    python scripts/ingest.py <vault_path> [--db database.duckdb]
 
 Example:
-    python scripts/ingest.py ../SecondBrainCopy_260113
-    python scripts/ingest.py ../SecondBrainCopy_260113 --db my_brain.duckdb
+    python scripts/ingest.py /path/to/obsidian/vault
+    python scripts/ingest.py ~/Documents/MyVault --db my_brain.duckdb
 """
 import argparse
 import sys
@@ -25,9 +25,7 @@ def main():
     )
     parser.add_argument(
         "vault_path",
-        nargs="?",
-        default="../SecondBrainCopy_260113",
-        help="Path to Obsidian vault (default: ../SecondBrainCopy_260113)"
+        help="Path to Obsidian vault"
     )
     parser.add_argument(
         "--db",

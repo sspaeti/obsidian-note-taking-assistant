@@ -2,12 +2,14 @@
 
 Local-first knowledge retrieval system for Obsidian notes using DuckDB with vector search.
 
+
 ## Features
 
 - **Semantic search**: Find notes by meaning using sentence-transformer embeddings
 - **Backlinks**: Find all notes linking to a specific note
 - **Graph traversal**: Discover notes N hops away via wikilinks
 - **Hidden connections**: Surface semantically similar notes that aren't directly linked
+- **Your notes never leave your machine**: Everything runs locally with DuckDB and [`all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) embedding model.
 
 ## Setup
 
@@ -238,3 +240,29 @@ These are **discovery suggestions** - semantically related content you might wan
 | Connections | Wikilinks (graph) | "What's N hops away in my graph?" |
 | Semantic | Embeddings (vectors) | "Find notes about this topic" |
 | Hidden | Both combined | "What should I link but haven't?" |
+
+
+## 100% Local & Private
+
+**Your notes never leave your machine.** Everything runs locally:
+
+| Component | Where it runs |
+|-----------|---------------|
+| Embedding model | Local CPU (sentence-transformers) |
+| Vector database | Local file (DuckDB) |
+| All queries | Local |
+
+Unlike OpenAI/Anthropic APIs that send your text to the cloud, the `all-MiniLM-L6-v2` (replace with any model you like) embedding model runs entirely in-process on your machine. This makes it safe for:
+- Personal journals and private notes
+- Confidential work documents
+- Sensitive research materials
+- Anything you wouldn't want uploaded to a third party
+
+**Network activity:**
+- One-time model download (~90MB from Hugging Face) on first run
+- After that: zero network activity, works fully offline
+
+```bash
+# Pre-download model for offline use
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+```

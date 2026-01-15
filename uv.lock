@@ -434,6 +434,31 @@ wheels = [
 ]
 
 [[package]]
+name = "obsidian-note-taking-assistant"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "duckdb" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyyaml" },
+    { name = "sentence-transformers" },
+    { name = "tabulate" },
+    { name = "tqdm" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "duckdb", specifier = ">=1.4.3" },
+    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "pandas", specifier = ">=2.3.3" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "sentence-transformers", specifier = ">=5.2.0" },
+    { name = "tabulate", specifier = ">=0.9.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -735,31 +760,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/5e/e565bd73991d42023eb82bb99e51c5b3d9e2c588ca9d4b3e2cc1d3ca62a6/scipy-1.17.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:f9eb55bb97d00f8b7ab95cb64f873eb0bf54d9446264d9f3609130381233483f", size = 37457743, upload-time = "2026-01-10T21:30:34.819Z" },
     { url = "https://files.pythonhosted.org/packages/58/a8/a66a75c3d8f1fb2b83f66007d6455a06a6f6cf5618c3dc35bc9b69dd096e/scipy-1.17.0-cp314-cp314t-win_amd64.whl", hash = "sha256:1ff269abf702f6c7e67a4b7aad981d42871a11b9dd83c58d2d2ea624efbd1088", size = 37098574, upload-time = "2026-01-10T21:30:40.782Z" },
     { url = "https://files.pythonhosted.org/packages/56/a5/df8f46ef7da168f1bc52cd86e09a9de5c6f19cc1da04454d51b7d4f43408/scipy-1.17.0-cp314-cp314t-win_arm64.whl", hash = "sha256:031121914e295d9791319a1875444d55079885bbae5bdc9c5e0f2ee5f09d34ff", size = 25246266, upload-time = "2026-01-10T21:30:45.923Z" },
-]
-
-[[package]]
-name = "second-brain-rag"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "duckdb" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pyyaml" },
-    { name = "sentence-transformers" },
-    { name = "tabulate" },
-    { name = "tqdm" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "duckdb", specifier = ">=1.4.3" },
-    { name = "numpy", specifier = ">=2.4.1" },
-    { name = "pandas", specifier = ">=2.3.3" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "sentence-transformers", specifier = ">=5.2.0" },
-    { name = "tabulate", specifier = ">=0.9.0" },
-    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [[package]]
