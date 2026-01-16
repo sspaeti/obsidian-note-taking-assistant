@@ -24,26 +24,29 @@ class DateTimeEncoder(json.JSONEncoder):
 class SecondBrainIngester:
     """Ingestion pipeline for Obsidian vault into DuckDB."""
 
-    def __init__(self, db_path: str = 'second_brain.duckdb'):
+    def __init__(self, db_path: str = 'second_brain.duckdb', model_name: str = None):
         """
         Initialize ingester with database connection.
 
         Args:
             db_path: Path to DuckDB database file
+            model_name: Embedding model name (default from schema.DEFAULT_MODEL)
         """
+        from .schema import DEFAULT_MODEL
         self.db_path = db_path
+        self.model_name = model_name or DEFAULT_MODEL
         self.conn = None
         self.embedder = None
 
     def _ensure_connection(self):
         """Ensure database connection is open."""
         if self.conn is None:
-            self.conn = init_database(self.db_path)
+            self.conn = init_database(self.db_path, self.model_name)
 
     def _ensure_embedder(self):
         """Ensure embedding model is loaded."""
         if self.embedder is None:
-            self.embedder = EmbeddingGenerator()
+            self.embedder = EmbeddingGenerator(self.model_name)
 
     def scan_vault(self, vault_path: Path) -> Generator[Path, None, None]:
         """
@@ -85,7 +88,7 @@ class SecondBrainIngester:
 
         # Clean start - drop existing tables
         drop_all_tables(self.conn)
-        self.conn = init_database(self.db_path)
+        self.conn = init_database(self.db_path, self.model_name)
 
         files = list(self.scan_vault(vault))
         print(f"Found {len(files)} markdown files")
@@ -254,19 +257,74 @@ class SecondBrainIngester:
                 self.conn.execute("BEGIN TRANSACTION")
         self.conn.execute("COMMIT")
 
+        # Build hyperedges from tags and folders
+        print("Building hyperedges...")
+        hyperedge_map: Dict[tuple, List[int]] = {}  # (type, value) -> [note_ids]
+
+        for note in notes_data:
+            note_id = note['note_id']
+
+            # Tag hyperedges
+            for tag in note.get('tags', []) or []:
+                key = ('tag', tag.lower().strip('#'))
+                if key not in hyperedge_map:
+                    hyperedge_map[key] = []
+                hyperedge_map[key].append(note_id)
+
+            # Folder hyperedge (parent folder path)
+            file_path = note.get('file_path', '')
+            if '/' in file_path:
+                folder = '/'.join(file_path.split('/')[:-1])
+                if folder:
+                    key = ('folder', folder)
+                    if key not in hyperedge_map:
+                        hyperedge_map[key] = []
+                    hyperedge_map[key].append(note_id)
+
+            # Alias hyperedges
+            for alias in note.get('aliases', []) or []:
+                key = ('alias', alias.lower())
+                if key not in hyperedge_map:
+                    hyperedge_map[key] = []
+                hyperedge_map[key].append(note_id)
+
+        # Insert hyperedges and members
+        print("Inserting hyperedges...")
+        hyperedge_id = 0
+        self.conn.execute("BEGIN TRANSACTION")
+        for (edge_type, edge_value), note_ids in tqdm(hyperedge_map.items(), desc="Hyperedges"):
+            hyperedge_id += 1
+            self.conn.execute("""
+                INSERT INTO hyperedges (hyperedge_id, edge_type, edge_value)
+                VALUES (?, ?, ?)
+            """, [hyperedge_id, edge_type, edge_value])
+
+            for nid in note_ids:
+                self.conn.execute("""
+                    INSERT INTO hyperedge_members (hyperedge_id, note_id)
+                    VALUES (?, ?)
+                """, [hyperedge_id, nid])
+
+            if hyperedge_id % commit_batch_size == 0:
+                self.conn.execute("COMMIT")
+                self.conn.execute("BEGIN TRANSACTION")
+        self.conn.execute("COMMIT")
+
         # Create HNSW index
         print("\nPhase 4: Creating search index...")
         create_hnsw_index(self.conn)
 
         # Summary
+        hyperedge_member_count = sum(len(nids) for nids in hyperedge_map.values())
         print("\n" + "=" * 50)
         print("Ingestion Complete!")
         print("=" * 50)
-        print(f"Notes:      {len(notes_data):,}")
-        print(f"Links:      {len(links_data):,}")
-        print(f"Chunks:     {len(chunks_data):,}")
-        print(f"Embeddings: {len(embeddings):,}")
-        print(f"Database:   {self.db_path}")
+        print(f"Notes:       {len(notes_data):,}")
+        print(f"Links:       {len(links_data):,}")
+        print(f"Chunks:      {len(chunks_data):,}")
+        print(f"Embeddings:  {len(embeddings):,}")
+        print(f"Hyperedges:  {len(hyperedge_map):,} ({hyperedge_member_count:,} memberships)")
+        print(f"Database:    {self.db_path}")
 
     def close(self):
         """Close database connection."""

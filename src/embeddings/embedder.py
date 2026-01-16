@@ -8,12 +8,13 @@ from tqdm import tqdm
 class EmbeddingGenerator:
     """Wrapper for sentence-transformers embedding model."""
 
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str):
         """
         Initialize with sentence-transformers model.
 
-        all-MiniLM-L6-v2 produces 384-dimensional vectors.
-        It's fast, lightweight, and good for semantic similarity.
+        Common models:
+        - all-MiniLM-L6-v2: 384-dim, fast, good for testing
+        - BAAI/bge-m3: 1024-dim, slower but higher quality
         """
         print(f"Loading embedding model: {model_name}")
         self.model = SentenceTransformer(model_name)
@@ -40,7 +41,7 @@ class EmbeddingGenerator:
             show_progress: Show tqdm progress bar
 
         Returns:
-            List of numpy arrays (384-dimensional each)
+            List of numpy arrays (dimension depends on model, 1024 for BGE-M3)
         """
         embeddings = []
         total_batches = (len(texts) + batch_size - 1) // batch_size

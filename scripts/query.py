@@ -7,6 +7,8 @@ Usage:
     python scripts/query.py backlinks "note-slug"
     python scripts/query.py connections "note-slug" [--hops N]
     python scripts/query.py hidden "query" --seed "note-slug"
+    python scripts/query.py shared-tags "note-slug" [--min-shared N]
+    python scripts/query.py graph-boosted "query" --seed "note-slug" [--boost N]
     python scripts/query.py sql "SELECT * FROM notes LIMIT 5"
 
 Examples:
@@ -14,6 +16,8 @@ Examples:
     python scripts/query.py backlinks "functional-data-engineering"
     python scripts/query.py connections "data-contracts" --hops 2
     python scripts/query.py hidden "Python pipelines" --seed "functional-data-engineering"
+    python scripts/query.py shared-tags "data-contracts" --min-shared 2
+    python scripts/query.py graph-boosted "data modeling" --seed "data-contracts" --boost 1.3
 """
 import argparse
 import sys
@@ -37,12 +41,28 @@ class SecondBrainQuery:
         self.conn.execute("LOAD vss;")
         self._embedder = None
 
+        # Read model config from database metadata
+        try:
+            result = self.conn.execute(
+                "SELECT value FROM metadata WHERE key = 'model_name'"
+            ).fetchone()
+            self.model_name = result[0] if result else 'all-MiniLM-L6-v2'
+
+            result = self.conn.execute(
+                "SELECT value FROM metadata WHERE key = 'embedding_dim'"
+            ).fetchone()
+            self.embedding_dim = int(result[0]) if result else 384
+        except Exception:
+            # Fallback for old databases without metadata table
+            self.model_name = 'all-MiniLM-L6-v2'
+            self.embedding_dim = 384
+
     @property
     def embedder(self):
         """Lazy load embedding model."""
         if self._embedder is None:
-            print("Loading embedding model...", file=sys.stderr)
-            self._embedder = SentenceTransformer('all-MiniLM-L6-v2')
+            print(f"Loading embedding model: {self.model_name}...", file=sys.stderr)
+            self._embedder = SentenceTransformer(self.model_name)
         return self._embedder
 
     def semantic_search(
@@ -64,14 +84,14 @@ class SecondBrainQuery:
         """
         query_embedding = self.embedder.encode(query).tolist()
 
-        sql = """
+        sql = f"""
             SELECT DISTINCT
                 n.title,
                 n.slug,
                 n.file_path,
                 c.content,
                 c.heading_context,
-                1 - array_cosine_distance(e.embedding, $1::FLOAT[384]) as similarity
+                1 - array_cosine_distance(e.embedding, $1::FLOAT[{self.embedding_dim}]) as similarity
             FROM embeddings e
             JOIN chunks c ON c.chunk_id = e.chunk_id
             JOIN notes n ON n.note_id = c.note_id
@@ -199,18 +219,18 @@ class SecondBrainQuery:
         """
         query_embedding = self.embedder.encode(query).tolist()
 
-        sql = """
+        sql = f"""
             WITH semantic_similar AS (
                 SELECT DISTINCT
                     n.slug,
                     n.title,
                     c.content,
-                    MIN(1 - array_cosine_distance(e.embedding, $1::FLOAT[384])) as similarity
+                    MIN(1 - array_cosine_distance(e.embedding, $1::FLOAT[{self.embedding_dim}])) as similarity
                 FROM embeddings e
                 JOIN chunks c ON c.chunk_id = e.chunk_id
                 JOIN notes n ON n.note_id = c.note_id
                 GROUP BY n.slug, n.title, c.content
-                HAVING MIN(array_cosine_distance(e.embedding, $1::FLOAT[384])) < 0.6
+                HAVING MIN(array_cosine_distance(e.embedding, $1::FLOAT[{self.embedding_dim}])) < 0.6
             ),
             direct_links AS (
                 SELECT DISTINCT target_slug as slug FROM links WHERE source_slug = $2
@@ -237,6 +257,129 @@ class SecondBrainQuery:
                 'slug': r[1],
                 'snippet': r[2][:300] + "..." if len(r[2]) > 300 else r[2],
                 'similarity': round(r[3], 4)
+            }
+            for r in results
+        ]
+
+    def find_shared_tags(
+        self,
+        slug: str,
+        min_shared: int = 2,
+        limit: int = 20
+    ) -> List[dict]:
+        """
+        Find notes sharing multiple tags via hyperedges.
+
+        Args:
+            slug: Note slug to find related notes for
+            min_shared: Minimum number of shared tags
+            limit: Maximum results
+
+        Returns:
+            List of notes sharing tags with the specified note
+        """
+        sql = """
+            WITH seed_hyperedges AS (
+                SELECT hm.hyperedge_id
+                FROM hyperedge_members hm
+                JOIN notes n ON n.note_id = hm.note_id
+                JOIN hyperedges h ON h.hyperedge_id = hm.hyperedge_id
+                WHERE n.slug = $1 AND h.edge_type = 'tag'
+            )
+            SELECT n.title, n.slug, COUNT(*) as shared_count,
+                   list(h.edge_value) as shared_tags
+            FROM hyperedge_members hm
+            JOIN notes n ON n.note_id = hm.note_id
+            JOIN hyperedges h ON h.hyperedge_id = hm.hyperedge_id
+            WHERE hm.hyperedge_id IN (SELECT hyperedge_id FROM seed_hyperedges)
+              AND n.slug != $1
+              AND h.edge_type = 'tag'
+            GROUP BY n.title, n.slug
+            HAVING COUNT(*) >= $2
+            ORDER BY shared_count DESC
+            LIMIT $3
+        """
+
+        results = self.conn.execute(sql, [slug, min_shared, limit]).fetchall()
+
+        return [
+            {
+                'title': r[0],
+                'slug': r[1],
+                'shared_count': r[2],
+                'shared_tags': r[3]
+            }
+            for r in results
+        ]
+
+    def graph_boosted_search(
+        self,
+        query: str,
+        seed_slug: str,
+        limit: int = 10,
+        boost_factor: float = 1.2
+    ) -> List[dict]:
+        """
+        Semantic search with graph connectivity boost.
+
+        Notes that are both semantically similar AND connected via links
+        get a score boost.
+
+        Args:
+            query: Search query
+            seed_slug: Note to check graph connectivity from
+            limit: Maximum results
+            boost_factor: Multiplier for graph-connected results
+
+        Returns:
+            List of notes with combined semantic + graph scores
+        """
+        query_embedding = self.embedder.encode(query).tolist()
+
+        sql = f"""
+            WITH semantic_matches AS (
+                SELECT DISTINCT ON (n.slug)
+                    n.slug,
+                    n.title,
+                    c.content,
+                    c.heading_context,
+                    1 - array_cosine_distance(e.embedding, $1::FLOAT[{self.embedding_dim}]) as similarity
+                FROM embeddings e
+                JOIN chunks c ON c.chunk_id = e.chunk_id
+                JOIN notes n ON n.note_id = c.note_id
+                ORDER BY n.slug, similarity DESC
+            ),
+            graph_connected AS (
+                SELECT DISTINCT target_slug as slug FROM links WHERE source_slug = $2
+                UNION
+                SELECT DISTINCT source_slug as slug FROM links WHERE target_slug = $2
+            )
+            SELECT
+                sm.title,
+                sm.slug,
+                sm.content,
+                sm.heading_context,
+                sm.similarity,
+                CASE WHEN gc.slug IS NOT NULL THEN true ELSE false END as is_linked,
+                sm.similarity * CASE WHEN gc.slug IS NOT NULL THEN $3 ELSE 1.0 END as final_score
+            FROM semantic_matches sm
+            LEFT JOIN graph_connected gc ON gc.slug = sm.slug
+            WHERE sm.slug != $2
+            ORDER BY final_score DESC
+            LIMIT $4
+        """
+
+        results = self.conn.execute(sql, [query_embedding, seed_slug, boost_factor, limit]).fetchall()
+
+        return [
+            {
+                'title': r[0],
+                'slug': r[1],
+                'snippet': r[2][:300] + "..." if len(r[2]) > 300 else r[2],
+                'heading': r[3],
+                'similarity': round(r[4], 4),
+                'is_linked': r[5],
+                'final_score': round(r[6], 4)
             }
             for r in results
         ]
@@ -319,6 +462,42 @@ def format_hidden(results: List[dict], query: str, seed: str) -> str:
     return "\n".join(output)
 
 
+def format_shared_tags(results: List[dict], slug: str, min_shared: int) -> str:
+    """Format shared tags results for display."""
+    if not results:
+        return f"No notes found sharing {min_shared}+ tags with '{slug}'"
+
+    output = [f"# Notes Sharing Tags with '{slug}' (min: {min_shared})\n"]
+
+    for r in results:
+        tags_str = ", ".join(r['shared_tags'][:5])
+        if len(r['shared_tags']) > 5:
+            tags_str += f" (+{len(r['shared_tags']) - 5} more)"
+        output.append(f"- **{r['title']}** ({r['slug']})")
+        output.append(f"  Shared: {r['shared_count']} tags - {tags_str}")
+
+    return "\n".join(output)
+
+
+def format_graph_boosted(results: List[dict], query: str, seed: str) -> str:
+    """Format graph-boosted search results for display."""
+    if not results:
+        return f"No results found for '{query}'"
+
+    output = [f"# Graph-Boosted Search: '{query}'"]
+    output.append(f"Results boosted by link proximity to '{seed}':\n")
+
+    for r in results:
+        link_indicator = " [LINKED]" if r['is_linked'] else ""
+        heading = f" ({r['heading']})" if r['heading'] else ""
+        output.append(f"\n## {r['title']}{heading}{link_indicator}")
+        output.append(f"**Slug:** {r['slug']} | **Similarity:** {r['similarity']} | **Final:** {r['final_score']}")
+        output.append(f"\n{r['snippet']}")
+        output.append("-" * 60)
+
+    return "\n".join(output)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Query Second Brain knowledge base",
@@ -329,12 +508,14 @@ Examples:
     python scripts/query.py backlinks "functional-data-engineering"
     python scripts/query.py connections "data-contracts" --hops 2
     python scripts/query.py hidden "Python pipelines" --seed "functional-data-engineering"
+    python scripts/query.py shared-tags "data-contracts" --min-shared 2
+    python scripts/query.py graph-boosted "data modeling" --seed "data-contracts"
     python scripts/query.py sql "SELECT title, slug FROM notes LIMIT 10"
         """
     )
     parser.add_argument(
         "command",
-        choices=["semantic", "backlinks", "connections", "hidden", "sql"],
+        choices=["semantic", "backlinks", "connections", "hidden", "shared-tags", "graph-boosted", "sql"],
         help="Query type"
     )
     parser.add_argument(
@@ -365,6 +546,18 @@ Examples:
     parser.add_argument(
         "--tags",
         help="Comma-separated tags to filter (for semantic search)"
+    )
+    parser.add_argument(
+        "--min-shared",
+        type=int,
+        default=2,
+        help="Minimum shared tags for 'shared-tags' command (default: 2)"
+    )
+    parser.add_argument(
+        "--boost",
+        type=float,
+        default=1.2,
+        help="Boost factor for linked notes in 'graph-boosted' command (default: 1.2)"
     )
 
     args = parser.parse_args()
@@ -401,6 +594,17 @@ Examples:
                 sys.exit(1)
             results = qb.find_hidden_connections(args.query, args.seed, limit=args.limit)
             print(format_hidden(results, args.query, args.seed))
+
+        elif args.command == "shared-tags":
+            results = qb.find_shared_tags(args.query, min_shared=args.min_shared, limit=args.limit)
+            print(format_shared_tags(results, args.query, args.min_shared))
+
+        elif args.command == "graph-boosted":
+            if not args.seed:
+                print("Error: --seed is required for 'graph-boosted' command")
+                sys.exit(1)
+            results = qb.graph_boosted_search(args.query, args.seed, limit=args.limit, boost_factor=args.boost)
+            print(format_graph_boosted(results, args.query, args.seed))
 
         elif args.command == "sql":
             result = qb.execute_sql(args.query)

@@ -5,11 +5,13 @@ Local-first knowledge retrieval system for Obsidian notes using DuckDB with vect
 
 ## Features
 
-- **Semantic search**: Find notes by meaning using sentence-transformer embeddings
+- **Semantic search**: Find notes by meaning using BGE-M3 embeddings (1024-dim)
 - **Backlinks**: Find all notes linking to a specific note
 - **Graph traversal**: Discover notes N hops away via wikilinks
 - **Hidden connections**: Surface semantically similar notes that aren't directly linked
-- **Your notes never leave your machine**: Everything runs locally with DuckDB and [`all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) embedding model.
+- **Shared tags (Hyperedge)**: Find notes sharing multiple tags via hyperedge graph
+- **Graph-boosted search**: Combine semantic similarity with graph connectivity
+- **Your notes never leave your machine**: Everything runs locally with DuckDB and [`BAAI/bge-m3`](https://huggingface.co/BAAI/bge-m3) embedding model.
 
 ## Setup
 
@@ -56,6 +58,12 @@ uv run python scripts/query.py connections "note-slug" --hops 2
 # Hidden connections (similar but unlinked)
 uv run python scripts/query.py hidden "search query" --seed "note-slug"
 
+# Shared tags (hyperedge query) - find notes sharing 2+ tags
+uv run python scripts/query.py shared-tags "note-slug" --min-shared 2
+
+# Graph-boosted search - semantic + graph connectivity boost
+uv run python scripts/query.py graph-boosted "search query" --seed "note-slug" --boost 1.2
+
 # Raw SQL
 uv run python scripts/query.py sql "SELECT title, slug FROM notes LIMIT 10"
 ```
@@ -69,12 +77,14 @@ make stats      # Show database statistics
 
 ## Database Schema
 
-| Table      | Description                          |
-|------------|--------------------------------------|
-| notes      | Note metadata, content, frontmatter  |
-| links      | Wikilink graph edges                 |
-| chunks     | Chunked content for RAG retrieval    |
-| embeddings | 384-dim vectors (all-MiniLM-L6-v2)   |
+| Table             | Description                              |
+|-------------------|------------------------------------------|
+| notes             | Note metadata, content, frontmatter      |
+| links             | Wikilink graph edges                     |
+| chunks            | Chunked content for RAG retrieval        |
+| embeddings        | 1024-dim vectors (BAAI/bge-m3)           |
+| hyperedges        | Multiway relations (tags, folders)       |
+| hyperedge_members | Note membership in hyperedges            |
 
 ## Tech Stack
 
@@ -240,6 +250,8 @@ These are **discovery suggestions** - semantically related content you might wan
 | Connections | Wikilinks (graph) | "What's N hops away in my graph?" |
 | Semantic | Embeddings (vectors) | "Find notes about this topic" |
 | Hidden | Both combined | "What should I link but haven't?" |
+| Shared Tags | Hyperedges | "Notes sharing multiple tags with this one" |
+| Graph-Boosted | Embeddings + Graph | "Semantic search boosted by graph proximity" |
 
 
 ## 100% Local & Private
@@ -252,17 +264,17 @@ These are **discovery suggestions** - semantically related content you might wan
 | Vector database | Local file (DuckDB) |
 | All queries | Local |
 
-Unlike OpenAI/Anthropic APIs that send your text to the cloud, the `all-MiniLM-L6-v2` (replace with any model you like) embedding model runs entirely in-process on your machine. This makes it safe for:
+Unlike OpenAI/Anthropic APIs that send your text to the cloud, the `BAAI/bge-m3` (replace with any model you like) embedding model runs entirely in-process on your machine. This makes it safe for:
 - Personal journals and private notes
 - Confidential work documents
 - Sensitive research materials
 - Anything you wouldn't want uploaded to a third party
 
 **Network activity:**
-- One-time model download (~90MB from Hugging Face) on first run
+- One-time model download (~1.8GB from Hugging Face) on first run
 - After that: zero network activity, works fully offline
 
 ```bash
 # Pre-download model for offline use
-python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3')"
 ```

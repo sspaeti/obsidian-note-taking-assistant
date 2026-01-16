@@ -3,11 +3,13 @@
 Ingest Obsidian vault into DuckDB with vector embeddings.
 
 Usage:
-    python scripts/ingest.py <vault_path> [--db database.duckdb]
+    python scripts/ingest.py <vault_path> [--db database.duckdb] [--model MODEL]
 
 Example:
     python scripts/ingest.py /path/to/obsidian/vault
     python scripts/ingest.py ~/Documents/MyVault --db my_brain.duckdb
+    python scripts/ingest.py ~/Documents/MyVault --model BAAI/bge-m3  # Higher quality, slower
+    python scripts/ingest.py ~/Documents/MyVault --model all-MiniLM-L6-v2  # Fast default
 """
 import argparse
 import sys
@@ -17,11 +19,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.database.ingestion import SecondBrainIngester
+from src.database.schema import MODEL_CONFIGS, DEFAULT_MODEL
 
 
 def main():
+    available_models = ", ".join(MODEL_CONFIGS.keys())
+
     parser = argparse.ArgumentParser(
-        description="Ingest Obsidian vault into DuckDB with vector embeddings"
+        description="Ingest Obsidian vault into DuckDB with vector embeddings",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Available models (or use any sentence-transformers model):
+  {available_models}
+
+Default: {DEFAULT_MODEL}
+        """
     )
     parser.add_argument(
         "vault_path",
@@ -31,6 +43,11 @@ def main():
         "--db",
         default="second_brain.duckdb",
         help="Output database path (default: second_brain.duckdb)"
+    )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Embedding model (default: {DEFAULT_MODEL})"
     )
     parser.add_argument(
         "--batch-size",
@@ -62,9 +79,10 @@ def main():
 
     print(f"Vault: {vault_path}")
     print(f"Database: {db_path}")
+    print(f"Model: {args.model}")
     print()
 
-    ingester = SecondBrainIngester(db_path)
+    ingester = SecondBrainIngester(db_path, model_name=args.model)
     try:
         ingester.ingest_vault(
             str(vault_path),
