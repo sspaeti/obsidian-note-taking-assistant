@@ -8,6 +8,7 @@ endif
 VAULT_PATH ?= /path/to/your/obsidian/vault
 DB_PATH ?= second_brain.duckdb
 MODEL ?= all-MiniLM-L6-v2
+# MODEL ?= BAAI/bge-m3
 
 .PHONY: help ingest test-semantic test-backlinks test-connections test-hidden test-shared-tags test-graph-boosted test-sql test-all stats clean
 
