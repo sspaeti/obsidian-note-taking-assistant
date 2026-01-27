@@ -10,7 +10,7 @@ DB_PATH ?= second_brain.duckdb
 # MODEL ?= all-MiniLM-L6-v2
 MODEL ?= BAAI/bge-m3
 
-.PHONY: help ingest test-semantic test-backlinks test-connections test-hidden test-shared-tags test-graph-boosted test-sql test-all stats clean embed-server web-install web-dev web-build web-start web-lint web-deploy
+.PHONY: help ingest sync-motherduck test-semantic test-backlinks test-connections test-hidden test-shared-tags test-graph-boosted test-sql test-all stats clean embed-server web-install web-dev web-build web-start web-lint web-deploy
 
 help:
 	@echo "Second Brain RAG - Available commands:"
@@ -26,6 +26,7 @@ help:
 	@echo "  make test-graph-boosted - Test graph-boosted search"
 	@echo "  make test-sql         - Test raw SQL query"
 	@echo "  make stats            - Show database statistics"
+	@echo "  make sync-motherduck  - Upload local DB to MotherDuck cloud"
 	@echo "  make clean            - Remove database file"
 	@echo "  make embed-server     - Start local embedding server (port 8001)"
 	@echo ""
@@ -81,6 +82,20 @@ test-all: test-semantic test-backlinks test-connections test-hidden test-shared-
 stats:
 	@echo "=== Database Statistics ==="
 	uv run duckdb "$(DB_PATH)" -c "SELECT 'notes' as table_name, COUNT(*) as count FROM notes UNION ALL SELECT 'links', COUNT(*) FROM links UNION ALL SELECT 'chunks', COUNT(*) FROM chunks UNION ALL SELECT 'embeddings', COUNT(*) FROM embeddings UNION ALL SELECT 'hyperedges', COUNT(*) FROM hyperedges UNION ALL SELECT 'hyperedge_members', COUNT(*) FROM hyperedge_members;"
+
+sync-motherduck:
+	@echo "=== Syncing local DB to MotherDuck (obsidian_rag) ==="
+	@echo "This will REPLACE all data in MotherDuck with local data."
+	uv run duckdb "$(DB_PATH)" -c " \
+		ATTACH 'md:obsidian_rag' AS md; \
+		CREATE OR REPLACE TABLE md.notes AS SELECT * FROM notes; \
+		CREATE OR REPLACE TABLE md.chunks AS SELECT * FROM chunks; \
+		CREATE OR REPLACE TABLE md.embeddings AS SELECT * FROM embeddings; \
+		CREATE OR REPLACE TABLE md.links AS SELECT * FROM links; \
+		CREATE OR REPLACE TABLE md.hyperedges AS SELECT * FROM hyperedges; \
+		CREATE OR REPLACE TABLE md.hyperedge_members AS SELECT * FROM hyperedge_members; \
+	"
+	@echo "=== Sync complete! ==="
 
 clean:
 	rm -f "$(DB_PATH)"
