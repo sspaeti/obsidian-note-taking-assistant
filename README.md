@@ -254,6 +254,10 @@ These are **discovery suggestions** - semantically related content you might wan
 | Graph-Boosted | Embeddings + Graph | "Semantic search boosted by graph proximity" |
 
 
+## Web App
+
+A browser-based interface is available in `web-app/`. It queries MotherDuck cloud and uses a deployed embedding server for semantic search. See `web-app/README.md` for setup.
+
 ## 100% Local & Private
 
 **Your notes never leave your machine.** Everything runs locally:
