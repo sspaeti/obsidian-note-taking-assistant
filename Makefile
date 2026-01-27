@@ -7,13 +7,15 @@ endif
 # Defaults (override in .env or command line)
 VAULT_PATH ?= /path/to/your/obsidian/vault
 DB_PATH ?= second_brain.duckdb
-MODEL ?= all-MiniLM-L6-v2
-# MODEL ?= BAAI/bge-m3
+# MODEL ?= all-MiniLM-L6-v2
+MODEL ?= BAAI/bge-m3
 
-.PHONY: help ingest test-semantic test-backlinks test-connections test-hidden test-shared-tags test-graph-boosted test-sql test-all stats clean
+.PHONY: help ingest test-semantic test-backlinks test-connections test-hidden test-shared-tags test-graph-boosted test-sql test-all stats clean embed-server web-install web-dev web-build web-start web-lint web-deploy
 
 help:
 	@echo "Second Brain RAG - Available commands:"
+	@echo ""
+	@echo "Ingestion & Testing:"
 	@echo "  make ingest           - Run full ingestion pipeline"
 	@echo "  make test-all         - Run all test queries"
 	@echo "  make test-semantic    - Test semantic search"
@@ -25,6 +27,15 @@ help:
 	@echo "  make test-sql         - Test raw SQL query"
 	@echo "  make stats            - Show database statistics"
 	@echo "  make clean            - Remove database file"
+	@echo "  make embed-server     - Start local embedding server (port 8001)"
+	@echo ""
+	@echo "Web App (in web-app/):"
+	@echo "  make web-install      - Install npm dependencies"
+	@echo "  make web-dev          - Start development server (http://localhost:3000)"
+	@echo "  make web-build        - Build for production"
+	@echo "  make web-start        - Start production server"
+	@echo "  make web-lint         - Run ESLint"
+	@echo "  make web-deploy       - Deploy to Vercel"
 	@echo ""
 	@echo "Configuration (set in .env or via command line):"
 	@echo "  VAULT_PATH = $(VAULT_PATH)"
@@ -74,3 +85,36 @@ stats:
 clean:
 	rm -f "$(DB_PATH)"
 	@echo "Database removed."
+
+embed-server:
+	@echo "Starting local embedding server on http://localhost:8001"
+	uv run uvicorn api.embed_server:app --host 0.0.0.0 --port 8001
+
+# Web App commands
+web-install:
+	cd web-app && npm install
+
+web-dev:
+	@echo "Starting dev server at http://localhost:3000"
+	@(sleep 2 && xdg-open http://localhost:3000) &
+	cd web-app && npm run dev
+
+web-build:
+	cd web-app && npm run build
+
+web-start:
+	cd web-app && npm run start
+
+web-lint:
+	cd web-app && npm run lint
+
+web-deploy:
+	cd web-app && npx vercel
+	cd web-app && npx vercel
+
+web-redeploy-prod:
+	cd web-app && npx vercel --prod 
+
+web-locally: #uses fast api for model inferance
+	(make embed-server & sleep 4) && \
+	make web-dev
