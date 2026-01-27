@@ -12,8 +12,8 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 # Copy application
 COPY embed_server.py .
 
-# Expose port
-EXPOSE 8001
+# Default port (Railway overrides via PORT env)
+ENV PORT=8080
 
-# Run server
-CMD ["uvicorn", "embed_server:app", "--host", "0.0.0.0", "--port", "8001"]
+# Use shell form with explicit bash to expand variables
+CMD ["/bin/sh", "-c", "uvicorn embed_server:app --host 0.0.0.0 --port ${PORT}"]

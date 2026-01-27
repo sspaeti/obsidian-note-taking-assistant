@@ -17,3 +17,10 @@ Then add `EMBED_API_URL=https://your-railway-url/embed` to Vercel.
 
 
 2. deployment vercel app again with `make web-redeploy-prod`
+
+
+## Resources of BGE-M3
+Needs:
+  - ~4GB RAM
+  - 30-60s to load the model
+  - Model stays in memory between requests
