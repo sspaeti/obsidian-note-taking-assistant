@@ -4,7 +4,7 @@ Local-first knowledge retrieval system for Obsidian notes using DuckDB with vect
 
 > **[Try the Live Demo → explore.ssp.sh](https://explore.ssp.sh)**
 >
-> Browse, search, and discover hidden connections in my public [Data Engineering Second Brain](https://ssp.sh/brain).
+> Browse, search, and discover hidden connections in my public [Data Engineering Second Brain](https://ssp.sh/brain) ([source](https://github.com/sspaeti/second-brain-public)).
 > This repo contains both the ingestion pipeline (CLI) and the [web-app](web-app/README.md) source code.
 
 ## Features
