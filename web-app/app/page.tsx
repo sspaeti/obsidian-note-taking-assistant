@@ -460,16 +460,18 @@ export default function Home() {
                                 title={st.title}
                                 className="text-[var(--text-primary)]"
                               />
-                              <div className="flex flex-wrap gap-1 mt-0.5">
-                                {st.shared_tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="text-xs px-1.5 py-0.5 bg-[var(--purple)]/20 rounded text-[var(--purple)]"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
+                              {Array.isArray(st.shared_tags) && st.shared_tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                  {st.shared_tags.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="text-xs px-1.5 py-0.5 bg-[var(--purple)]/20 rounded text-[var(--purple)]"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>
