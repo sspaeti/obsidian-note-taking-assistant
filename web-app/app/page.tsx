@@ -266,6 +266,9 @@ export default function Home() {
                   <h2 className="font-medium text-[var(--text-secondary)]">
                     Notes ({notes.length})
                   </h2>
+                  <p className="text-xs text-[var(--text-secondary)] opacity-70">
+                    Click row to select · Click title to open in Second Brain
+                  </p>
                 </div>
                 <div className="divide-y divide-[var(--border-subtle)] max-h-[600px] overflow-y-auto">
                   {loading && notes.length === 0 ? (
@@ -341,6 +344,15 @@ export default function Home() {
                         ))}
                       </div>
                     )}
+                    <button
+                      onClick={() => {
+                        setTab("hidden");
+                        handleHiddenConnections();
+                      }}
+                      className="mt-3 text-sm px-3 py-1.5 bg-[var(--purple)] text-white rounded hover:opacity-90"
+                    >
+                      Find Hidden Connections →
+                    </button>
                   </div>
 
                   {/* Backlinks */}
@@ -627,7 +639,7 @@ export default function Home() {
             <img
               src="/logo_ssp_quadrat.png"
               alt="ssp.sh"
-              className="h-8 w-8"
+              className="h-8 w-auto object-contain"
             />
           </a>
         </div>
