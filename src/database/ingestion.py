@@ -299,7 +299,7 @@ class SecondBrainIngester:
                 VALUES (?, ?, ?)
             """, [hyperedge_id, edge_type, edge_value])
 
-            for nid in note_ids:
+            for nid in set(note_ids):  # Deduplicate in case of duplicate tags
                 self.conn.execute("""
                     INSERT INTO hyperedge_members (hyperedge_id, note_id)
                     VALUES (?, ?)
