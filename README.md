@@ -2,6 +2,10 @@
 
 Local-first knowledge retrieval system for Obsidian notes using DuckDB with vector search.
 
+> **[Try the Live Demo → explore.ssp.sh](https://explore.ssp.sh)**
+>
+> Browse, search, and discover hidden connections in my public [Data Engineering Second Brain](https://ssp.sh/brain).
+> This repo contains both the ingestion pipeline (CLI) and the [web-app](web-app/README.md) source code.
 
 ## Features
 
@@ -254,9 +258,6 @@ These are **discovery suggestions** - semantically related content you might wan
 | Graph-Boosted | Embeddings + Graph | "Semantic search boosted by graph proximity" |
 
 
-## Web App
-
-A browser-based interface is available in `web-app/`. It queries MotherDuck cloud and uses a deployed embedding server for semantic search. See `web-app/README.md` for setup.
 
 ## 100% Local & Private
 
