@@ -1,8 +1,46 @@
 @import "tailwindcss";
 
+/* ssp.sh Color Palette - Kanagawa-based */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light mode colors */
+  --background: #faf8f8;
+  --foreground: #161209;
+  --bg-outer: #faf8f8;
+  --bg-inner: #ffffff;
+  --bg-header: #ffffff;
+  --text-primary: #161209;
+  --text-secondary: #545454;
+  --accent: #c34043;
+  --link: #3150AA;
+  --link-hover: #7E4A95;
+  --purple: #624c83;
+  --border: #e0ddd6;
+  --border-subtle: #e8e5de;
+  --tag-bg: #f0ede6;
+  --tag-text: #545454;
+  --selected-bg: rgba(49, 80, 170, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode colors - Kanagawa palette */
+    --background: #181820;
+    --foreground: #DCD7BA;
+    --bg-outer: #181820;
+    --bg-inner: #1F1F28;
+    --bg-header: #1F1F28;
+    --text-primary: #DCD7BA;
+    --text-secondary: #717C7C;
+    --accent: #FF5D62;
+    --link: #658594;
+    --link-hover: #D27E99;
+    --purple: #938AA9;
+    --border: #54546D;
+    --border-subtle: #2A2A37;
+    --tag-bg: #2A2A37;
+    --tag-text: #717C7C;
+    --selected-bg: rgba(255, 93, 98, 0.15);
+  }
 }
 
 @theme inline {
@@ -10,13 +48,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

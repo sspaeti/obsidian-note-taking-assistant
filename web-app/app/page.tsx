@@ -200,19 +200,19 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <header className="border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
+    <div className="min-h-screen bg-[var(--bg-outer)]">
+      <header className="border-b border-[var(--border)] bg-[var(--bg-header)]">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">
             Second Brain RAG
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-[var(--text-secondary)]">
             Query your knowledge graph with semantic search
           </p>
         </div>
       </header>
 
-      <nav className="border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
+      <nav className="border-b border-[var(--border)] bg-[var(--bg-header)]">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex gap-4">
             {(["browse", "semantic", "hidden"] as Tab[]).map((t) => (
@@ -221,8 +221,8 @@ export default function Home() {
                 onClick={() => setTab(t)}
                 className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
                   tab === t
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                    ? "border-[var(--accent)] text-[var(--accent)]"
+                    : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {t === "browse" && "Browse & Links"}
@@ -236,7 +236,7 @@ export default function Home() {
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
             {error}
             <button
               onClick={() => setError(null)}
@@ -257,37 +257,37 @@ export default function Home() {
                   placeholder="Search notes by title..."
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--bg-inner)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
 
-              <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                  <h2 className="font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)] overflow-hidden">
+                <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                  <h2 className="font-medium text-[var(--text-secondary)]">
                     Notes ({notes.length})
                   </h2>
                 </div>
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-700 max-h-[600px] overflow-y-auto">
+                <div className="divide-y divide-[var(--border-subtle)] max-h-[600px] overflow-y-auto">
                   {loading && notes.length === 0 ? (
-                    <div className="p-4 text-zinc-500">Loading...</div>
+                    <div className="p-4 text-[var(--text-secondary)]">Loading...</div>
                   ) : notes.length === 0 ? (
-                    <div className="p-4 text-zinc-500">No notes found</div>
+                    <div className="p-4 text-[var(--text-secondary)]">No notes found</div>
                   ) : (
                     notes.map((note) => (
                       <button
                         key={note.note_id}
                         onClick={() => selectNote(note)}
-                        className={`w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors ${
+                        className={`w-full text-left px-4 py-3 hover:bg-[var(--tag-bg)] transition-colors ${
                           selectedNote?.note_id === note.note_id
-                            ? "bg-blue-50 dark:bg-blue-900/20"
+                            ? "bg-[var(--selected-bg)]"
                             : ""
                         }`}
                       >
-                        <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <div className="font-medium text-[var(--text-primary)]">
                           <NoteLink
                             slug={note.slug}
                             title={note.title}
-                            className="text-zinc-900 dark:text-zinc-100"
+                            className="text-[var(--text-primary)]"
                           />
                         </div>
                         {note.tags && note.tags.length > 0 && (
@@ -295,13 +295,13 @@ export default function Home() {
                             {note.tags.slice(0, 3).map((tag) => (
                               <span
                                 key={tag}
-                                className="text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-400"
+                                className="text-xs px-2 py-0.5 bg-[var(--tag-bg)] rounded text-[var(--tag-text)]"
                               >
                                 {tag}
                               </span>
                             ))}
                             {note.tags.length > 3 && (
-                              <span className="text-xs text-zinc-400">
+                              <span className="text-xs text-[var(--text-secondary)]">
                                 +{note.tags.length - 3}
                               </span>
                             )}
@@ -318,15 +318,15 @@ export default function Home() {
             <div className="space-y-4">
               {selectedNote ? (
                 <>
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
-                    <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                  <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)] p-4">
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">
                       <NoteLink
                         slug={selectedNote.slug}
                         title={selectedNote.title}
-                        className="text-zinc-900 dark:text-zinc-100"
+                        className="text-[var(--text-primary)]"
                       />
                     </h2>
-                    <p className="text-sm text-zinc-500 mt-1">
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">
                       {selectedNote.word_count} words
                     </p>
                     {selectedNote.tags && selectedNote.tags.length > 0 && (
@@ -334,7 +334,7 @@ export default function Home() {
                         {selectedNote.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-700 dark:text-blue-300"
+                            className="text-xs px-2 py-1 bg-[var(--selected-bg)] rounded text-[var(--accent)]"
                           >
                             #{tag}
                           </span>
@@ -344,15 +344,15 @@ export default function Home() {
                   </div>
 
                   {/* Backlinks */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                      <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+                  <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                    <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                      <h3 className="font-medium text-[var(--text-secondary)]">
                         Backlinks ({backlinks.length})
                       </h3>
                     </div>
                     <div className="p-4">
                       {backlinks.length === 0 ? (
-                        <p className="text-sm text-zinc-500">No backlinks</p>
+                        <p className="text-sm text-[var(--text-secondary)]">No backlinks</p>
                       ) : (
                         <ul className="space-y-1">
                           {backlinks.map((bl) => (
@@ -360,7 +360,7 @@ export default function Home() {
                               <NoteLink
                                 slug={bl.slug}
                                 title={bl.title}
-                                className="text-sm text-blue-600 dark:text-blue-400"
+                                className="text-sm text-[var(--link)] hover:text-[var(--link-hover)]"
                               />
                             </li>
                           ))}
@@ -370,15 +370,15 @@ export default function Home() {
                   </div>
 
                   {/* Forward Links */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                      <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+                  <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                    <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                      <h3 className="font-medium text-[var(--text-secondary)]">
                         Links To ({forwardLinks.length})
                       </h3>
                     </div>
                     <div className="p-4">
                       {forwardLinks.length === 0 ? (
-                        <p className="text-sm text-zinc-500">No outgoing links</p>
+                        <p className="text-sm text-[var(--text-secondary)]">No outgoing links</p>
                       ) : (
                         <ul className="space-y-1">
                           {forwardLinks.map((fl) => (
@@ -386,7 +386,7 @@ export default function Home() {
                               <NoteLink
                                 slug={fl.slug}
                                 title={fl.title}
-                                className="text-sm text-blue-600 dark:text-blue-400"
+                                className="text-sm text-[var(--link)] hover:text-[var(--link-hover)]"
                               />
                             </li>
                           ))}
@@ -396,15 +396,15 @@ export default function Home() {
                   </div>
 
                   {/* Connections (N hops) */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                      <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+                  <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                    <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                      <h3 className="font-medium text-[var(--text-secondary)]">
                         Connections (2 hops) ({connections.length})
                       </h3>
                     </div>
                     <div className="p-4 max-h-48 overflow-y-auto">
                       {connections.length === 0 ? (
-                        <p className="text-sm text-zinc-500">No connections</p>
+                        <p className="text-sm text-[var(--text-secondary)]">No connections</p>
                       ) : (
                         <ul className="space-y-2">
                           {connections.map((conn) => (
@@ -412,13 +412,13 @@ export default function Home() {
                               key={conn.slug}
                               className="text-sm flex items-center gap-2"
                             >
-                              <span className="text-xs px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 rounded">
+                              <span className="text-xs px-1.5 py-0.5 bg-[var(--tag-bg)] rounded text-[var(--text-secondary)]">
                                 {conn.depth}
                               </span>
                               <NoteLink
                                 slug={conn.slug}
                                 title={conn.title}
-                                className="text-zinc-900 dark:text-zinc-100"
+                                className="text-[var(--text-primary)]"
                               />
                             </li>
                           ))}
@@ -428,15 +428,15 @@ export default function Home() {
                   </div>
 
                   {/* Shared Tags */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                      <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+                  <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                    <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                      <h3 className="font-medium text-[var(--text-secondary)]">
                         Shared Tags ({sharedTags.length})
                       </h3>
                     </div>
                     <div className="p-4 max-h-48 overflow-y-auto">
                       {sharedTags.length === 0 ? (
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-[var(--text-secondary)]">
                           No notes sharing 2+ tags
                         </p>
                       ) : (
@@ -446,13 +446,13 @@ export default function Home() {
                               <NoteLink
                                 slug={st.slug}
                                 title={st.title}
-                                className="text-zinc-900 dark:text-zinc-100"
+                                className="text-[var(--text-primary)]"
                               />
                               <div className="flex flex-wrap gap-1 mt-0.5">
                                 {st.shared_tags.map((tag) => (
                                   <span
                                     key={tag}
-                                    className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-green-700 dark:text-green-300"
+                                    className="text-xs px-1.5 py-0.5 bg-[var(--purple)]/20 rounded text-[var(--purple)]"
                                   >
                                     {tag}
                                   </span>
@@ -466,7 +466,7 @@ export default function Home() {
                   </div>
                 </>
               ) : (
-                <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-8 text-center text-zinc-500">
+                <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)] p-8 text-center text-[var(--text-secondary)]">
                   Select a note to see its connections
                 </div>
               )}
@@ -483,45 +483,45 @@ export default function Home() {
                 value={semanticQuery}
                 onChange={(e) => setSemanticQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSemanticSearch()}
-                className="flex-1 px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--bg-inner)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
               />
               <button
                 onClick={handleSemanticSearch}
                 disabled={loading || !semanticQuery.trim()}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-[var(--accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--text-secondary)]">
               Uses BGE-M3 embeddings to find semantically similar content, even
               if the exact words don&apos;t match.
             </p>
 
             {semanticResults.length > 0 && (
-              <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                  <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                  <h3 className="font-medium text-[var(--text-secondary)]">
                     Results ({semanticResults.length})
                   </h3>
                 </div>
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-700">
+                <div className="divide-y divide-[var(--border-subtle)]">
                   {semanticResults.map((result, idx) => (
                     <div key={idx} className="p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <h4 className="font-medium text-[var(--text-primary)]">
                           <NoteLink
                             slug={result.slug}
                             title={result.title}
-                            className="text-zinc-900 dark:text-zinc-100"
+                            className="text-[var(--text-primary)]"
                           />
                         </h4>
-                        <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-700 dark:text-blue-300">
+                        <span className="text-xs px-2 py-1 bg-[var(--selected-bg)] rounded text-[var(--accent)]">
                           {(result.similarity * 100).toFixed(1)}%
                         </span>
                       </div>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3">
+                      <p className="text-sm text-[var(--text-secondary)] line-clamp-3">
                         {result.chunk_content}
                       </p>
                     </div>
@@ -534,11 +534,11 @@ export default function Home() {
 
         {tab === "hidden" && (
           <div className="space-y-4 max-w-2xl">
-            <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
-              <h3 className="font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+            <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)] p-4">
+              <h3 className="font-medium text-[var(--text-primary)] mb-2">
                 Find Hidden Connections
               </h3>
-              <p className="text-sm text-zinc-500 mb-4">
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
                 Discover notes that are semantically similar to your selected
                 note but aren&apos;t directly linked. These are potential
                 connections you might have missed!
@@ -547,19 +547,19 @@ export default function Home() {
               {selectedNote ? (
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <p className="text-sm text-zinc-500">Selected note:</p>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                    <p className="text-sm text-[var(--text-secondary)]">Selected note:</p>
+                    <p className="font-medium text-[var(--text-primary)]">
                       <NoteLink
                         slug={selectedNote.slug}
                         title={selectedNote.title}
-                        className="text-zinc-900 dark:text-zinc-100"
+                        className="text-[var(--text-primary)]"
                       />
                     </p>
                   </div>
                   <button
                     onClick={handleHiddenConnections}
                     disabled={loading}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-[var(--purple)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Searching..." : "Find Hidden"}
                   </button>
@@ -572,28 +572,28 @@ export default function Home() {
             </div>
 
             {hiddenResults.length > 0 && (
-              <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-700/50 border-b border-zinc-200 dark:border-zinc-700">
-                  <h3 className="font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="bg-[var(--bg-inner)] rounded-lg border border-[var(--border)]">
+                <div className="px-4 py-2 bg-[var(--tag-bg)] border-b border-[var(--border)]">
+                  <h3 className="font-medium text-[var(--text-secondary)]">
                     Hidden Connections ({hiddenResults.length})
                   </h3>
                 </div>
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-700">
+                <div className="divide-y divide-[var(--border-subtle)]">
                   {hiddenResults.map((result, idx) => (
                     <div key={idx} className="p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <h4 className="font-medium text-[var(--text-primary)]">
                           <NoteLink
                             slug={result.slug}
                             title={result.title}
-                            className="text-zinc-900 dark:text-zinc-100"
+                            className="text-[var(--text-primary)]"
                           />
                         </h4>
-                        <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded text-purple-700 dark:text-purple-300">
+                        <span className="text-xs px-2 py-1 bg-[var(--purple)]/20 rounded text-[var(--purple)]">
                           {(result.similarity * 100).toFixed(1)}% similar
                         </span>
                       </div>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3">
+                      <p className="text-sm text-[var(--text-secondary)] line-clamp-3">
                         {result.chunk_content}
                       </p>
                     </div>
@@ -605,16 +605,30 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-zinc-200 dark:border-zinc-700 mt-8">
-        <div className="max-w-6xl mx-auto px-4 py-4 text-center text-sm text-zinc-500">
-          Powered by MotherDuck + DuckDB WASM + BGE-M3 embeddings |{" "}
+      <footer className="border-t border-[var(--border)] mt-8">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="text-sm text-[var(--text-secondary)]">
+            Powered by MotherDuck + DuckDB WASM + BGE-M3 embeddings |{" "}
+            <a
+              href={BRAIN_BASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--link)] hover:text-[var(--link-hover)] hover:underline"
+            >
+              Browse full Second Brain
+            </a>
+          </div>
           <a
-            href={BRAIN_BASE_URL}
+            href="https://ssp.sh"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
+            className="opacity-70 hover:opacity-100 transition-opacity"
           >
-            Browse full Second Brain
+            <img
+              src="/logo_ssp_quadrat.png"
+              alt="ssp.sh"
+              className="h-8 w-8"
+            />
           </a>
         </div>
       </footer>
