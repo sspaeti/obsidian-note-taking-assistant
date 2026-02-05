@@ -1,6 +1,6 @@
 # Second Brain RAG
 
-Local-first knowledge retrieval system for Obsidian notes using DuckDB with vector search.
+Local-first knowledge retrieval system for Obsidian notes using DuckDB with vector search. Find [accompanied blog](https://motherduck.com/blog/obsidian-rag-duckdb-motherduck/).
 
 > **[Try the Live Demo → explore.ssp.sh](https://explore.ssp.sh)**
 >
