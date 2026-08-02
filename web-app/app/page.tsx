@@ -207,7 +207,7 @@ export default function Home() {
             Second Brain RAG
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            Query your knowledge graph with semantic search
+            Query my knowledge graph with semantic search
           </p>
         </div>
       </header>
